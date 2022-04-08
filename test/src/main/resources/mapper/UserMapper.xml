@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.test.mapper.UserMapper">
+    <select id="getInfo" statementType="CALLABLE" resultType="String">
+        {call potential_infectors(
+        #{input})}
+    </select>
+
+    <select id="getActivityInfo" statementType="CALLABLE" resultType="String">
+        {call activity_path(
+        #{input})}
+    </select>
+
+    <select id="getUserIdInfo" resultType="String">
+        select distinct t.userId from info t where t.outTime is null and t.userType = '入口';
+    </select>
+
+    <select id="getStartEndUserIdInfo" resultType="String">
+        select distinct t.userId
+        from info t
+        where unix_timestamp(t.userTime) &gt;= unix_timestamp(#{startTime})
+        and unix_timestamp(t.outTime) &lt;= unix_timestamp(#{endTime});
+    </select>
+
+    <select id="getSpecificAddressInfo" resultType="String">
+        select json_object(
+        'SceneryName', c.scenic_name,
+        'SpecificAddress', concat(concat(c.city,c.area), c.address)
+        )from scenic_info c
+        where c.lat is null and c.lng is null;
+
+    </select>
+    <select id="getSpecificAreaInfo" resultType="String">
+        select json_object(
+        'Codes', a.codes,
+        'Area', a.area
+        )from area_info a
+        where a.lat is null and a.lng is null;
+    </select>
+
+    <select id="updateSceneryLatLng">
+        update scenic_info n set n.lat = #{lat}, n.lng = #{lng} where n.scenic_name = #{sceneryName};
+    </select>
+
+    <select id="updateAreaLatLng">
+        update area_info r set r.lat = #{lat}, r.lng = #{lng} where r.codes = #{codes};
+    </select>
+
+    <select id="getAllActivityInfo" statementType="CALLABLE" resultType="String">
+        {call all_activity_path(
+        #{input})}
+    </select>
+
+    <select id="updateOutTime">
+        update info e set e.outTime = #{endOutTime} where e.userId = #{userId} and e.sceneryName = #{sceneryName};
+    </select>
+
+    <select id="getUsersInAndOutTimeInfo" parameterType="String" resultType="String">
+        select json_object(
+        'UserId', s.userId,
+        'SceneryName', s.sceneryName,
+        'InTime', date_format(s.userTime, '%Y-%m-%d %H:%i:%s'),
+        'OutTime', date_format(s.outTime, '%Y-%m-%d %H:%i:%s')
+        )
+        from info s where s.sceneryName = #{sceneryName}
+        and s.userType = '入口';
+    </select>
+
+    <select id="getCityInfo" parameterType="String" resultType="String">
+        select json_object(
+        'City', s.city,
+        'UserId', i.userId
+        )
+        from info i left join scenic_info s on i.sceneryName = s.scenic_name
+        where i.userId = #{userId}
+        and i.userType = '入口';
+    </select>
+
+    <select id="getCitySceneryTourTimeInfo" parameterType="String" resultType="String">
+        select json_object(
+        'SceneryName', s.sceneryName,
+        'InTime', date_format(s.userTime, '%Y-%m-%d %H:%i:%s'),
+        'OutTime', date_format(s.outTime, '%Y-%m-%d %H:%i:%s')
+        )
+        from info s left join scenic_info n on s.sceneryName = n.scenic_name
+        where s.userId = #{userId} and n.city = #{city}
+        and s.userType = '入口'
+        order by s.userTime;
+    </select>
+
+    <select id="getStartEndSceneryInfo" resultType="String">
+        select json_object(
+        'SceneryName', i.sceneryName
+        )
+        from info i
+        where i.userType = '入口'
+        and unix_timestamp(i.userTime) &gt;= unix_timestamp(#{startTime})
+        and unix_timestamp(i.userTime) &lt;= unix_timestamp(#{endTime});
+    </select>
+
+</mapper>
+
+
+

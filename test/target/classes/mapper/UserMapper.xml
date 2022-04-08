@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.test.mapper.UserMapper">
+<select id="getInfo" statementType="CALLABLE" resultType="String">
+    {call potential_infectors(
+    #{input})}
+</select>
+
+<select id="getActivityInfo" statementType="CALLABLE" resultType="String">
+    {call activity_path(
+    #{input})}
+</select>
+
+<select id="getUserIdInfo" resultType="String">
+    select distinct t.userId from test t;
+</select>
+
+<select id="getAllActivityInfo" statementType="CALLABLE" resultType="String">
+    {call all_activity_path(
+    #{input})}
+</select>
+
+<select id="updateOutTime">
+    update test e set e.outTime = #{endOutTime} where e.userId = #{userId} and e.sceneryName = #{sceneryName};
+</select>
+
+<select id="getUsersInAndOutTimeInfo" resultType="String">
+    select json_object(
+                    'UserId', s.userId,
+					'SceneryName', s.sceneryName,
+					'InTime', date_format(s.userTime, '%Y-%m-%d %H:%i:%s'),
+					'OutTime', date_format(s.outTime, '%Y-%m-%d %H:%i:%s')
+					)
+    from test s where s.sceneryName = #{sceneryName};
+</select>
+
+<select id="getCitySceneryTourTimeInfo" resultType="String">
+    select json_object(
+                    'SceneryName', s.sceneryName,
+                    'InTime', date_format(s.userTime, '%Y-%m-%d %H:%i:%s'),
+                    'OutTime', date_format(s.outTime, '%Y-%m-%d %H:%i:%s')
+                    )
+    from test s left join scenic_info_test n on s.sceneryName = n.scenic_name
+    where s.userId = #{userId} and n.city = #{city}
+    order by s.userTime;
+</select>
+
+</mapper>
+
+
+
